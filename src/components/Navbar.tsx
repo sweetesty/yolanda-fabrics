@@ -1,49 +1,88 @@
-import { ShoppingBag, Search, User } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
+import { useCart } from "../context/CartContext";
+
 
 const Navbar = () => {
+  const [open, setOpen] = useState(false);
+  const { cartCount, setIsCartOpen } = useCart();
+
   return (
-    <motion.nav 
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 1, ease: "easeOut" }}
-      className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-2xl border-b border-gold/10 px-6 lg:px-20 py-4 flex justify-between items-center"
-    >
-      <div className="flex items-center gap-4 group cursor-pointer">
-        <img 
-          src="/logo.jpeg" 
-          alt="Yolanda Fabrics Logo" 
-          className="h-12 w-12 object-contain rounded-full ring-1 ring-gold/20 group-hover:ring-gold/50 transition-all duration-500 shadow-sm" 
-        />
-        <div className="flex flex-col">
-          <span className="text-xl font-serif font-bold tracking-tight text-stone-900 leading-tight">Yolanda</span>
-          <span className="text-[9px] uppercase tracking-[0.4em] text-gold font-black">Fabrics</span>
+    <header className="fixed top-0 w-full z-50 transition-all duration-300">
+      <nav>
+        {/* Logo and Brand */}
+        <a href="#" className="nl text-decoration-none group">
+          <img src="/logo.jpeg" alt="Logo" />
+          <div className="nb">
+            Fabrics by Yolanda
+            <small>Exquisite Fabrics. Timeless Style.</small>
+          </div>
+        </a>
+
+        {/* Desktop Navigation Links */}
+        <ul className="nlinks hidden lg:flex">
+          <li>
+            <a href="#">Collections</a>
+          </li>
+          <li>
+            <a href="#catalog">Fabrics</a>
+          </li>
+          <li>
+            <a href="#contact">Custom Orders</a>
+          </li>
+          <li>
+            <a href="#about">About</a>
+          </li>
+        </ul>
+
+        {/* Desktop Cart CTA */}
+        <button 
+          onClick={() => setIsCartOpen(true)}
+          className="ncta hidden md:block"
+        >
+          Cart ({cartCount})
+        </button>
+
+        {/* Mobile Menu Trigger */}
+        <button 
+          className="lg:hidden text-[#B8962E] hover:text-[#111111] transition-colors bg-transparent border-none p-1" 
+          onClick={() => setOpen(!open)}
+          aria-label="Menu"
+        >
+          {open ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </nav>
+
+      {/* Mobile Drawer */}
+      {open && (
+        <div className="lg:hidden border-t border-[rgba(184,150,46,0.2)] bg-[#FFFFFF] shadow-md">
+          <nav className="flex flex-col p-6 gap-4 items-start h-auto w-full border-none">
+            <a href="#" onClick={() => setOpen(false)} className="text-[10px] tracking-[0.25em] uppercase text-[#111111] hover:text-[#B8962E] py-2 no-underline font-normal">
+              Collections
+            </a>
+            <a href="#catalog" onClick={() => setOpen(false)} className="text-[10px] tracking-[0.25em] uppercase text-[#111111] hover:text-[#B8962E] py-2 no-underline font-normal">
+              Fabrics
+            </a>
+            <a href="#contact" onClick={() => setOpen(false)} className="text-[10px] tracking-[0.25em] uppercase text-[#111111] hover:text-[#B8962E] py-2 no-underline font-normal">
+              Custom Orders
+            </a>
+            <a href="#about" onClick={() => setOpen(false)} className="text-[10px] tracking-[0.25em] uppercase text-[#111111] hover:text-[#B8962E] py-2 no-underline font-normal">
+              About
+            </a>
+            <button 
+              onClick={() => {
+                setOpen(false);
+                setIsCartOpen(true);
+              }}
+              className="ncta w-full mt-4 text-center"
+            >
+              Cart ({cartCount})
+            </button>
+          </nav>
         </div>
-      </div>
-      
-      <div className="hidden lg:flex gap-12 text-[10px] font-black uppercase tracking-[0.3em] text-stone-400">
-        {['Collections', 'Atelier', 'Heritage', 'Contact'].map((item) => (
-          <a key={item} href="#" className="relative group hover:text-gold transition-colors duration-500">
-            {item}
-            <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-gold group-hover:w-full transition-all duration-500" />
-          </a>
-        ))}
-      </div>
+      )}
+    </header>
+  );
+};
 
-      <div className="flex items-center gap-8 text-stone-400">
-        <button className="hover:text-gold transition-colors duration-300 cursor-pointer">
-          <Search size={18} strokeWidth={1.5} />
-        </button>
-        <button className="hover:text-gold transition-colors duration-300 cursor-pointer">
-          <User size={18} strokeWidth={1.5} />
-        </button>
-        <button className="relative hover:text-gold transition-colors duration-300 cursor-pointer">
-          <ShoppingBag size={18} strokeWidth={1.5} />
-          <span className="absolute -top-2 -right-2 w-4 h-4 bg-gold text-white text-[8px] font-black rounded-full flex items-center justify-center">0</span>
-        </button>
-      </div>
-    </motion.nav>
-  )
-}
-
-export default Navbar
+export default Navbar;

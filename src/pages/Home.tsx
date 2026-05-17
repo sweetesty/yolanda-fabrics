@@ -1,39 +1,281 @@
-import Navbar from '../components/Navbar'
-import Hero from '../components/Hero'
-import SignatureCollection from '../components/SignatureCollection'
-import Footer from '../components/Footer'
+import { useState } from "react";
+import { CheckCircle } from "lucide-react";
+import { useCart } from "../context/CartContext";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+
+const featuredFabricsList = [
+  {
+    id: 0,
+    title: "Royal Teal Damask",
+    category: "100% Organic Silk Base",
+    pricePerYard: 35000,
+    width: "54 inches",
+    origin: "Italy",
+    img: "/model-dress1.png",
+    desc: "Exquisite double-thread satin loomed in Como, featuring a liquid-like fluid drape and high-luminance gold weave."
+  },
+  {
+    id: 1,
+    title: "Champagne Brocade",
+    category: "Silk & Metallic Thread",
+    pricePerYard: 45000,
+    width: "48 inches",
+    origin: "France",
+    img: "/model-dress3.png",
+    desc: "Intricately hand-woven jacquard adorned with metallic raised gold embroidery representing absolute couture mastery."
+  },
+  {
+    id: 2,
+    title: "Forest Green Velvet",
+    category: "Silk-Cotton Blend",
+    pricePerYard: 48000,
+    width: "58 inches",
+    origin: "Italy",
+    img: "/model-dress2.png",
+    desc: "Incredibly dense woven double-pile velvet, offering heavy drape structure and majestic emerald sheen."
+  },
+  {
+    id: 3,
+    title: "Emerald Silk Crepe",
+    category: "100% Mulberry Silk",
+    pricePerYard: 38000,
+    width: "54 inches",
+    origin: "Italy",
+    img: "/model-dress.jpeg",
+    desc: "Ultra-fluid premium satin weave, perfect for bias-cut bridal gowns and luxurious couture drapery."
+  }
+];
 
 const Home = () => {
+  const { addToCart } = useCart();
+  // Track simple popup notification when added to cart
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const triggerAddToCart = (fabric: typeof featuredFabricsList[0]) => {
+    addToCart({
+      id: fabric.id,
+      title: fabric.title,
+      category: fabric.category,
+      pricePerYard: fabric.pricePerYard,
+      img: fabric.img
+    });
+    setToastMessage(`Added ${fabric.title} (${formatNaira(fabric.pricePerYard)}) to your bag!`);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 4000);
+  };
+
+  const formatNaira = (amount: number) => {
+    return `₦${amount.toLocaleString()}`;
+  };
+
   return (
-    <div className="min-h-screen bg-white text-stone-900 selection:bg-gold/30 selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#FFFFFF] text-[#111111] selection:bg-[#B8962E]/30 selection:text-white overflow-x-hidden font-sans pt-[72px]">
+      
+      {/* Navbar */}
       <Navbar />
-      <main>
-        <Hero />
-        <SignatureCollection />
-        
-        {/* Newsletter Section */}
-        <section className="py-40 bg-[#fafaf9] relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
-          <div className="container mx-auto px-6 lg:px-20 text-center relative z-10">
-            <h2 className="text-gold font-bold tracking-[0.4em] uppercase text-[10px] mb-6">The Inner Circle</h2>
-            <h3 className="text-4xl md:text-5xl font-serif font-bold text-stone-900 mb-10">Join the Circle of Elegance</h3>
-            <div className="max-w-xl mx-auto flex flex-col md:flex-row gap-4">
-              <input 
-                type="email" 
-                placeholder="ENTER YOUR EMAIL" 
-                className="flex-1 bg-white border border-gold/20 px-8 py-5 rounded-full text-[10px] tracking-widest focus:outline-none focus:border-gold transition-all duration-500 shadow-sm"
-              />
-              <button className="px-12 py-5 bg-gold text-white rounded-full font-bold uppercase tracking-widest text-[10px] hover:bg-gold-dark transition-all duration-500 shadow-lg shadow-gold/20">
-                Subscribe
-              </button>
+
+      {/* Dynamic Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-8 left-8 z-50 bg-[#111111] text-white border border-[#B8962E]/40 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-fade-up">
+          <CheckCircle size={18} className="text-[#B8962E]" />
+          <span className="text-[10px] uppercase tracking-wider font-bold">{toastMessage}</span>
+        </div>
+      )}
+
+      {/* 1. HERO SPLIT SECTION (Approved Figma Design) */}
+      <section className="hero">
+        <div className="hero-left">
+          <div className="hl-inner">
+            <div className="h-rule"></div>
+            <div className="h-pre">New Collection — 2025</div>
+            <h1 className="h-title">
+              Dressed<br />in <em>Pure<br />Luxury.</em>
+            </h1>
+            <p className="h-sub">
+              Curated fabrics that transform the way you move through the world. Brocades, silks &amp; velvets of unmatched quality.
+            </p>
+            <div className="flex gap-4">
+              <a href="#catalog" className="btn-g text-decoration-none flex items-center justify-center">
+                Shop Now
+              </a>
+              <a href="#editorials" className="btn-o text-decoration-none flex items-center justify-center">
+                Lookbook
+              </a>
             </div>
           </div>
-        </section>
-        
-        <Footer />
-      </main>
-    </div>
-  )
-}
+        </div>
+        <div className="hero-right">
+          <img src="/model-dress1.png" alt="Teal gown" />
+          <img src="/model-dress2.png" alt="Olive gown" />
+        </div>
+      </section>
 
-export default Home
+      {/* 2. INFINITE MARQUEE (Strip) */}
+      <div className="strip">
+        <div className="si">
+          <div className="sit">Commission Pieces</div>
+          <div className="sit">Haute Couture</div>
+          <div className="sit">Silk Crepe</div>
+          <div className="sit">Royal Velvet</div>
+          <div className="sit">Metallic Brocade</div>
+          <div className="sit">Premium Lace</div>
+          <div className="sit">Aso-Ebi Bundles</div>
+          
+          <div className="sit">Commission Pieces</div>
+          <div className="sit">Haute Couture</div>
+          <div className="sit">Silk Crepe</div>
+          <div className="sit">Royal Velvet</div>
+          <div className="sit">Metallic Brocade</div>
+          <div className="sit">Premium Lace</div>
+          <div className="sit">Aso-Ebi Bundles</div>
+        </div>
+      </div>
+
+      {/* 3. ABOUT STRIP (Stats Section) */}
+      <div className="about">
+        <div className="ab">
+          <div className="ab-num">500+</div>
+          <div className="ab-label">Premium Weaves</div>
+        </div>
+        <div className="ab-div"></div>
+        <div className="ab">
+          <div className="ab-num">12k+</div>
+          <div className="ab-label">Happy Customers</div>
+        </div>
+        <div className="ab-div"></div>
+        <div className="ab">
+          <div className="ab-num">8+</div>
+          <div className="ab-label">Years of Craft</div>
+        </div>
+      </div>
+
+      {/* 4. CATEGORY SHOWCASE / LOOKBOOK (Wear the Fabric) */}
+      <section id="editorials" className="sec">
+        <div className="max-w-7xl mx-auto">
+          <div className="sec-pre">Our Editorials</div>
+          <h2 className="sec-h">
+            Wear the <em>Fabric</em>
+          </h2>
+          <div className="sec-rule"></div>
+          
+          <div className="lb">
+            <div className="lbc">
+              <img src="/model-dress1.png" alt="Teal" />
+              <div className="lbc-info">
+                <span className="lbc-tag">Lagos Signature</span>
+                <span className="lbc-name">Royal Teal</span>
+                <span className="lbc-price">₦35,000 / Yd</span>
+              </div>
+            </div>
+            
+            <div className="lbc">
+              <img src="/model-dress3.png" alt="Champagne" />
+              <div className="lbc-info">
+                <span className="lbc-tag">Limited Weave</span>
+                <span className="lbc-name">Atelier Champagne</span>
+                <span className="lbc-price">₦45,000 / Yd</span>
+              </div>
+            </div>
+            
+            <div className="lbc">
+              <img src="/model-dress2.png" alt="Green" />
+              <div className="lbc-info">
+                <span className="lbc-tag">Imperial Texture</span>
+                <span className="lbc-name">Forest Green</span>
+                <span className="lbc-price">₦48,000 / Yd</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. FEATURED FABRICS GRID */}
+      <section id="catalog" className="sec dark border-t border-b border-[rgba(184,150,46,0.2)]">
+        <div className="max-w-7xl mx-auto">
+          <div className="sec-pre">Exclusive Selection</div>
+          <h2 className="sec-h">
+            Featured <em>Fabrics</em>
+          </h2>
+          <div className="sec-rule"></div>
+
+          <div className="pg">
+            {featuredFabricsList.map((fabric) => {
+              return (
+                <div key={fabric.id} className="pc">
+                  <div className="pc-img">
+                    <img src={fabric.img} alt={fabric.title} />
+                    <span className="pc-badge">{fabric.origin}</span>
+                  </div>
+                  
+                  <div className="pc-body">
+                    <span className="pc-t">{fabric.category}</span>
+                    <h4 className="pc-n">{fabric.title}</h4>
+                    <p className="pc-p">
+                      {formatNaira(fabric.pricePerYard)} <span>/ Yard</span>
+                    </p>
+
+                    <p className="text-[#777777] text-[10px] font-light leading-relaxed my-3">
+                      {fabric.desc}
+                    </p>
+
+                    {/* Exact Figma pc-btn button at full width! */}
+                    <button 
+                      onClick={() => triggerAddToCart(fabric)}
+                      className="pc-btn"
+                    >
+                      Add to Cart
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* 6. COUTURE QUOTE SECTION */}
+      <section className="quote">
+        <blockquote className="qt">
+          "Fabric is the canvas. Yolanda gives you the masterpiece."
+        </blockquote>
+        <span className="qa">Couture by Yolanda</span>
+        <img src="/logo.jpeg" alt="FY Logo" className="q-logo" />
+      </section>
+
+      {/* 7. NEWSLETTER SECTION */}
+      <section id="contact" className="nl-wrap">
+        <div>
+          <h2 className="nl-t">
+            Stay in the<br /><em>Yolanda Circle</em>
+          </h2>
+          <p className="nl-s">
+            Be the first to receive updates on premium releases, aso-ebi custom weaving seasons, and private sales.
+          </p>
+        </div>
+        <div>
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              setToastMessage("Thank you for subscribing to the Yolanda Circle!");
+              setTimeout(() => setToastMessage(null), 4000);
+            }}
+            className="nl-form"
+          >
+            <input type="email" placeholder="Your email address" className="nl-in" required />
+            <button type="submit" className="nl-btn border-none">
+              Subscribe to the Newsletter
+            </button>
+          </form>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <Footer />
+
+    </div>
+  );
+};
+
+export default Home;

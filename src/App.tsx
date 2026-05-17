@@ -1,12 +1,19 @@
 import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home'
+import { CartProvider } from './context/CartContext'
+import { CartDrawer } from './components/CartDrawer'
+import { WhatsAppFab } from './components/WhatsAppFab'
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      {/* Additional routes can be added here */}
-    </Routes>
+    <CartProvider>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        {/* Additional routes can be added here */}
+      </Routes>
+      <WhatsAppFab />
+      <CartDrawer />
+    </CartProvider>
   )
 }
 
