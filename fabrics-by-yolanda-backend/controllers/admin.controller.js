@@ -97,14 +97,50 @@ const updateCustomOrder = async (req, res) => {
 
 // GET /api/admin/customers
 const getCustomers = async (req, res) => {
-  const { data, error } = await supabaseAdmin
-    .from('profiles')
-    .select('*, orders(count)')
-    .eq('role', 'customer')
-    .order('created_at', { ascending: false });
+  try {
+    // 1. Fetch secure auth users to retrieve registered emails
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+    if (authError) {
+      return res.status(400).json({ success: false, error: authError.message });
+    }
+    const authUsers = authData?.users || [];
 
-  if (error) return res.status(400).json({ success: false, error: error.message });
-  res.json({ success: true, customers: data });
+    // 2. Fetch public profile metadata (names, phone, roles)
+    const { data: profiles, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (profileError) {
+      return res.status(400).json({ success: false, error: profileError.message });
+    }
+
+    // 3. Fetch orders to match with email in-memory
+    const { data: orders, error: orderError } = await supabaseAdmin
+      .from('orders')
+      .select('customer_email');
+
+    // 4. Filter profiles by role and stitch auth emails in-memory
+    const customers = profiles
+      .filter(p => p.role === 'customer')
+      .map(profile => {
+        const authUser = authUsers.find(u => u.id === profile.id);
+        const email = authUser ? authUser.email : 'No email';
+        const customerOrders = orders ? orders.filter(o => o.customer_email?.toLowerCase() === email.toLowerCase()) : [];
+        
+        return {
+          ...profile,
+          email,
+          orders: {
+            count: customerOrders.length
+          }
+        };
+      });
+
+    res.json({ success: true, customers });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 };
 
 // POST /api/admin/upload-image  — get Supabase Storage signed upload URL
@@ -124,4 +160,22 @@ const getUploadUrl = async (req, res) => {
   res.json({ success: true, uploadUrl: data.signedUrl, token: data.token, publicUrl, path });
 };
 
-module.exports = { getDashboard, getAllOrders, updateOrderStatus, getCustomOrders, updateCustomOrder, getCustomers, getUploadUrl };
+// PUT /api/admin/customers/:id/role  — elevate or demote patron roles
+const updateCustomerRole = async (req, res) => {
+  const { role } = req.body;
+  if (!['customer', 'admin'].includes(role)) {
+    return res.status(400).json({ success: false, error: 'Invalid role.' });
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('profiles')
+    .update({ role })
+    .eq('id', req.params.id)
+    .select()
+    .single();
+
+  if (error) return res.status(400).json({ success: false, error: error.message });
+  res.json({ success: true, profile: data });
+};
+
+module.exports = { getDashboard, getAllOrders, updateOrderStatus, getCustomOrders, updateCustomOrder, getCustomers, getUploadUrl, updateCustomerRole };

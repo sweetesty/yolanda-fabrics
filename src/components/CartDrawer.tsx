@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import { X, Plus, Minus, Trash2, ShoppingBag, CreditCard } from "lucide-react";
 
 export function CartDrawer() {
@@ -15,9 +16,15 @@ export function CartDrawer() {
 
   if (!isCartOpen) return null;
 
+  const { user } = useAuth();
+
   const handleProceedToCheckout = () => {
     setIsCartOpen(false); // Close drawer
-    navigate("/checkout");
+    if (!user) {
+      navigate("/auth?redirect=checkout");
+    } else {
+      navigate("/checkout");
+    }
   };
 
   return (

@@ -46,7 +46,7 @@ const addToCart = async (req, res) => {
   res.status(201).json({ success: true, item: data });
 };
 
-// PUT /api/cart/:id  — update yards
+// PUT /api/cart/:id  — update yards using product_id
 const updateCartItem = async (req, res) => {
   const { yards } = req.body;
   if (!yards || yards < 0.5) return res.status(400).json({ success: false, error: 'Minimum 0.5 yards.' });
@@ -54,7 +54,7 @@ const updateCartItem = async (req, res) => {
   const { data, error } = await supabaseAdmin
     .from('cart_items')
     .update({ yards })
-    .eq('id', req.params.id)
+    .eq('product_id', req.params.id) // Query directly by product_id
     .eq('user_id', req.user.id)   // ensures user owns this item
     .select()
     .single();
@@ -63,12 +63,12 @@ const updateCartItem = async (req, res) => {
   res.json({ success: true, item: data });
 };
 
-// DELETE /api/cart/:id  — remove item
+// DELETE /api/cart/:id  — remove item using product_id
 const removeFromCart = async (req, res) => {
   const { error } = await supabaseAdmin
     .from('cart_items')
     .delete()
-    .eq('id', req.params.id)
+    .eq('product_id', req.params.id) // Query directly by product_id
     .eq('user_id', req.user.id);
 
   if (error) return res.status(400).json({ success: false, error: error.message });

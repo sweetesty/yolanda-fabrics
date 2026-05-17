@@ -1,8 +1,7 @@
 const { supabaseAdmin } = require('../config/supabase');
 const emailService = require('../services/email.service');
 
-const SHIPPING_FEE = 3000; // ₦3,000 flat rate (make dynamic later)
-const FREE_SHIPPING_THRESHOLD = 50000; // free above ₦50,000
+const SHIPPING_FEE = 3000; // ₦3,000 flat rate
 
 // POST /api/orders  — place order from cart
 const placeOrder = async (req, res) => {
@@ -34,7 +33,7 @@ const placeOrder = async (req, res) => {
 
   // 3. Calculate totals
   const subtotal = cartItems.reduce((sum, item) => sum + (item.yards * item.products.price_per_yard), 0);
-  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+  const shipping = SHIPPING_FEE;
   const total = subtotal + shipping;
 
   // 4. Get user profile

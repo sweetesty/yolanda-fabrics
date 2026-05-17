@@ -212,6 +212,7 @@ RETURNS TRIGGER AS $$
 DECLARE
   count_today INTEGER;
   order_num TEXT;
+  year_str TEXT;
 BEGIN
   SELECT COUNT(*) INTO count_today FROM orders
   WHERE DATE(created_at) = CURRENT_DATE;

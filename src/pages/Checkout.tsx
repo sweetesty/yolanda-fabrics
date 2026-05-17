@@ -1,11 +1,33 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import { CreditCard, ArrowLeft, CheckCircle, ShoppingBag, Truck, ShieldCheck, ExternalLink } from "lucide-react";
+
+const NIGERIAN_STATES = [
+  "Lagos", "Abuja (FCT)", "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", 
+  "Benue", "Borno", "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", 
+  "Gombe", "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", 
+  "Kwara", "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", 
+  "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara"
+];
 
 export default function Checkout() {
   const navigate = useNavigate();
   const { cartItems, cartTotal, clearCart } = useCart();
+  const { user, token, isLoading } = useAuth();
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+  // Protect Checkout route
+  useEffect(() => {
+    if (!isLoading) {
+      if (!user) {
+        navigate("/auth?redirect=checkout");
+      } else if (user.role === "admin") {
+        navigate("/admin");
+      }
+    }
+  }, [user, isLoading, navigate]);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
@@ -22,10 +44,33 @@ export default function Checkout() {
     notes: "",
   });
 
+  // Pre-populate data when user logs in
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        name: user.full_name || prev.name,
+        email: user.email || prev.email,
+        phone: user.phone || prev.phone,
+      }));
+    }
+  }, [user]);
+
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  // Shipping Calculations (₦3,000 flat, free above ₦50,000)
-  const shippingFee = cartTotal >= 50000 || cartTotal === 0 ? 0 : 3000;
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen bg-[#FAFAF7] flex justify-center items-center font-sans">
+        <div className="text-center">
+          <img src="/logo.jpeg" alt="Logo" className="w-12 h-12 object-contain rounded-full border border-[rgba(184,150,46,0.2)] animate-pulse mx-auto mb-4" />
+          <span className="text-[10px] uppercase tracking-[0.25em] text-[#777777] block">Loading Atelier Checkout...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Shipping Calculations (₦3,000 flat rate)
+  const shippingFee = cartTotal === 0 ? 0 : 3000;
   const grandTotal = cartTotal + shippingFee;
 
   // Dynamically load Paystack Inline SDK
@@ -62,15 +107,13 @@ export default function Checkout() {
     return Object.keys(errors).length === 0;
   };
 
-  const handlePayment = (e: React.FormEvent) => {
+  const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
 
     setIsProcessing(true);
 
     const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "pk_test_b85bc88ee27e8a93910c2c15386fae8be4803b90"; // Test key fallback
-    const uniqueRef = `FBY-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
-
     const paystack = (window as any).PaystackPop;
     if (!paystack) {
       alert("Payment gateway is initializing. Please try again in a few seconds.");
@@ -78,48 +121,100 @@ export default function Checkout() {
       return;
     }
 
-    const handler = paystack.setup({
-      key: paystackKey,
-      email: formData.email,
-      amount: Math.round(grandTotal * 100), // in kobo
-      currency: "NGN",
-      ref: uniqueRef,
-      metadata: {
-        custom_fields: [
-          {
-            display_name: "Customer Name",
-            variable_name: "customer_name",
-            value: formData.name,
-          },
-          {
-            display_name: "Phone Number",
-            variable_name: "phone_number",
-            value: formData.phone,
-          },
-          {
-            display_name: "Shipping Destination",
-            variable_name: "shipping_destination",
-            value: `${formData.address}, ${formData.city}, ${formData.state}`,
-          },
-          {
-            display_name: "Order Notes",
-            variable_name: "order_notes",
-            value: formData.notes,
-          }
-        ],
-      },
-      callback: function (response: any) {
-        setPaymentRef(response.reference || uniqueRef);
-        setPaymentSuccess(true);
-        setIsProcessing(false);
-        clearCart();
-      },
-      onClose: function () {
-        setIsProcessing(false);
-      },
-    });
+    try {
+      // ─── STEP 1: REGISTER PENDING ORDER IN DATABASE ───
+      const orderRes = await fetch(`${API_BASE}/api/orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          shipping_address: formData.address,
+          shipping_city: formData.city,
+          shipping_state: formData.state,
+          phone: formData.phone,
+          notes: formData.notes
+        })
+      });
 
-    handler.openIframe();
+      const orderData = await orderRes.json();
+      if (!orderRes.ok || !orderData.success) {
+        alert(orderData.error || "Failed to register bespoke order.");
+        setIsProcessing(false);
+        return;
+      }
+
+      const dbOrder = orderData.order;
+      const uniqueRef = `FBY-${dbOrder.id}-${Date.now()}`;
+
+      // ─── STEP 2: OPEN PAYSTACK SECURE CARD CHECKOUT ───
+      const handler = paystack.setup({
+        key: paystackKey,
+        email: formData.email,
+        amount: Math.round(grandTotal * 100), // in kobo
+        currency: "NGN",
+        ref: uniqueRef,
+        metadata: {
+          order_id: dbOrder.id,
+          order_number: dbOrder.order_number,
+          custom_fields: [
+            {
+              display_name: "Customer Name",
+              variable_name: "customer_name",
+              value: formData.name,
+            },
+            {
+              display_name: "Phone Number",
+              variable_name: "phone_number",
+              value: formData.phone,
+            },
+            {
+              display_name: "Shipping Destination",
+              variable_name: "shipping_destination",
+              value: `${formData.address}, ${formData.city}, ${formData.state}`,
+            },
+            {
+              display_name: "Order Notes",
+              variable_name: "order_notes",
+              value: formData.notes,
+            }
+          ],
+        },
+        callback: async function (response: any) {
+          // ─── STEP 3: VERIFY AND COMMIT TRANSACTION ON SERVER ───
+          try {
+            const verifyRes = await fetch(`${API_BASE}/api/payments/verify/${response.reference || uniqueRef}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            const verifyData = await verifyRes.json();
+            if (verifyData.success) {
+              setPaymentRef(response.reference || uniqueRef);
+              setPaymentSuccess(true);
+              clearCart(); // Wipes local cart state
+            } else {
+              alert("Payment verification failed on the server. Please contact support.");
+            }
+          } catch (err) {
+            console.error("Error during payment verification:", err);
+            // Fallback to local success if server verification request has network glitch
+            setPaymentRef(response.reference || uniqueRef);
+            setPaymentSuccess(true);
+            clearCart();
+          }
+          setIsProcessing(false);
+        },
+        onClose: function () {
+          setIsProcessing(false);
+        },
+      });
+
+      handler.openIframe();
+    } catch (err) {
+      console.error("Failed to process payment pipeline:", err);
+      alert("An error occurred while compiling your Atelier order. Please try again.");
+      setIsProcessing(false);
+    }
   };
 
   // ─── STATE: SUCCESS PAGE ───
@@ -345,12 +440,11 @@ export default function Checkout() {
                   className="w-full bg-[#FAFAF7] border border-[rgba(184,150,46,0.25)] focus:border-[#B8962E] text-xs py-3 px-4 outline-none font-sans transition-all"
                   disabled={isProcessing}
                 >
-                  <option value="Lagos">Lagos</option>
-                  <option value="Abuja">Abuja</option>
-                  <option value="Rivers">Rivers</option>
-                  <option value="Oyo">Oyo</option>
-                  <option value="Delta">Delta</option>
-                  <option value="Enugu">Enugu</option>
+                  {NIGERIAN_STATES.map((state) => (
+                    <option key={state} value={state}>
+                      {state}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -445,11 +539,7 @@ export default function Checkout() {
                 </span>
               </div>
               
-              {shippingFee > 0 && (
-                <p className="text-[7.5px] text-[#777777] m-0 leading-normal italic text-right">
-                  Add ₦{(50000 - cartTotal).toLocaleString()} more to claim FREE nationwide delivery!
-                </p>
-              )}
+
 
               <div className="border-t border-[rgba(184,150,46,0.15)] pt-3 flex justify-between items-center text-sm font-bold text-[#111111]">
                 <span className="uppercase tracking-widest text-[10px]">Total Invoice</span>

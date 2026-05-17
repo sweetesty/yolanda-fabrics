@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { CheckCircle } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 const featuredFabricsList = [
   {
-    id: 0,
+    id: "c89f59f6-0683-4a1e-84b2-29e289c09aa3",
     title: "Royal Teal Damask",
     category: "100% Organic Silk Base",
     pricePerYard: 35000,
@@ -16,7 +17,7 @@ const featuredFabricsList = [
     desc: "Exquisite double-thread satin loomed in Como, featuring a liquid-like fluid drape and high-luminance gold weave."
   },
   {
-    id: 1,
+    id: "e88b8a5b-d3a9-4670-bbcf-83021f00889f",
     title: "Champagne Brocade",
     category: "Silk & Metallic Thread",
     pricePerYard: 45000,
@@ -26,7 +27,7 @@ const featuredFabricsList = [
     desc: "Intricately hand-woven jacquard adorned with metallic raised gold embroidery representing absolute couture mastery."
   },
   {
-    id: 2,
+    id: "497bb5a2-9b2f-410a-8bf8-2a1d2e1b12cb",
     title: "Forest Green Velvet",
     category: "Silk-Cotton Blend",
     pricePerYard: 48000,
@@ -36,7 +37,7 @@ const featuredFabricsList = [
     desc: "Incredibly dense woven double-pile velvet, offering heavy drape structure and majestic emerald sheen."
   },
   {
-    id: 3,
+    id: "b92b95c3-a3d2-43bb-8cbb-6a6c7b7f8c0d",
     title: "Emerald Silk Crepe",
     category: "100% Mulberry Silk",
     pricePerYard: 38000,
@@ -49,10 +50,16 @@ const featuredFabricsList = [
 
 const Home = () => {
   const { addToCart } = useCart();
+  const { user } = useAuth();
+
   // Track simple popup notification when added to cart
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const triggerAddToCart = (fabric: typeof featuredFabricsList[0]) => {
+    if (user?.role === "admin") {
+      alert("Atelier Preview Mode: Administrators are browsing the storefront in read-only preview mode and cannot perform customer bag actions.");
+      return;
+    }
     addToCart({
       id: fabric.id,
       title: fabric.title,
@@ -72,7 +79,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-[#FFFFFF] text-[#111111] selection:bg-[#B8962E]/30 selection:text-white overflow-x-hidden font-sans pt-[72px]">
-      
+
       {/* Navbar */}
       <Navbar />
 
@@ -107,8 +114,14 @@ const Home = () => {
           </div>
         </div>
         <div className="hero-right">
-          <img src="/model-dress1.png" alt="Teal gown" />
-          <img src="/model-dress2.png" alt="Olive gown" />
+          <div className="relative w-full h-full overflow-hidden">
+            <img src="/model-dress1.png" alt="Teal gown" className="w-full h-full object-cover" />
+            <img src="/logo.jpeg" alt="Logo" className="watermark-logo absolute bottom-3 right-3 rounded-full border border-white/20 bg-white/45 backdrop-blur-xs shadow-md z-10 object-contain opacity-60 pointer-events-none" />
+          </div>
+          <div className="relative w-full h-full overflow-hidden">
+            <img src="/model-dress2.png" alt="Olive gown" className="w-full h-full object-cover" />
+            <img src="/logo.jpeg" alt="Logo" className="watermark-logo absolute bottom-3 right-3 rounded-full border border-white/20 bg-white/45 backdrop-blur-xs shadow-md z-10 object-contain opacity-60 pointer-events-none" />
+          </div>
         </div>
       </section>
 
@@ -122,7 +135,7 @@ const Home = () => {
           <div className="sit">Metallic Brocade</div>
           <div className="sit">Premium Lace</div>
           <div className="sit">Aso-Ebi Bundles</div>
-          
+
           <div className="sit">Commission Pieces</div>
           <div className="sit">Haute Couture</div>
           <div className="sit">Silk Crepe</div>
@@ -159,28 +172,31 @@ const Home = () => {
             Wear the <em>Fabric</em>
           </h2>
           <div className="sec-rule"></div>
-          
+
           <div className="lb">
-            <div className="lbc">
+            <div className="lbc relative overflow-hidden">
               <img src="/model-dress1.png" alt="Teal" />
+              <img src="/logo.jpeg" alt="Logo" className="watermark-logo absolute top-3 right-3 rounded-full border border-white/20 bg-white/45 backdrop-blur-xs shadow-md z-10 object-contain opacity-60 pointer-events-none" />
               <div className="lbc-info">
                 <span className="lbc-tag">Lagos Signature</span>
                 <span className="lbc-name">Royal Teal</span>
                 <span className="lbc-price">₦35,000 / Yd</span>
               </div>
             </div>
-            
-            <div className="lbc">
+
+            <div className="lbc relative overflow-hidden">
               <img src="/model-dress3.png" alt="Champagne" />
+              <img src="/logo.jpeg" alt="Logo" className="watermark-logo absolute top-3 right-3 rounded-full border border-white/20 bg-white/45 backdrop-blur-xs shadow-md z-10 object-contain opacity-60 pointer-events-none" />
               <div className="lbc-info">
                 <span className="lbc-tag">Limited Weave</span>
                 <span className="lbc-name">Atelier Champagne</span>
                 <span className="lbc-price">₦45,000 / Yd</span>
               </div>
             </div>
-            
-            <div className="lbc">
+
+            <div className="lbc relative overflow-hidden">
               <img src="/model-dress2.png" alt="Green" />
+              <img src="/logo.jpeg" alt="Logo" className="watermark-logo absolute top-3 right-3 rounded-full border border-white/20 bg-white/45 backdrop-blur-xs shadow-md z-10 object-contain opacity-60 pointer-events-none" />
               <div className="lbc-info">
                 <span className="lbc-tag">Imperial Texture</span>
                 <span className="lbc-name">Forest Green</span>
@@ -204,11 +220,12 @@ const Home = () => {
             {featuredFabricsList.map((fabric) => {
               return (
                 <div key={fabric.id} className="pc">
-                  <div className="pc-img">
+                  <div className="pc-img relative">
                     <img src={fabric.img} alt={fabric.title} />
                     <span className="pc-badge">{fabric.origin}</span>
+                    <img src="/logo.jpeg" alt="Logo" className="watermark-logo absolute bottom-3 right-3 rounded-full border border-white/20 bg-white/45 backdrop-blur-xs shadow-md z-10 object-contain opacity-60 pointer-events-none" />
                   </div>
-                  
+
                   <div className="pc-body">
                     <span className="pc-t">{fabric.category}</span>
                     <h4 className="pc-n">{fabric.title}</h4>
@@ -221,7 +238,7 @@ const Home = () => {
                     </p>
 
                     {/* Exact Figma pc-btn button at full width! */}
-                    <button 
+                    <button
                       onClick={() => triggerAddToCart(fabric)}
                       className="pc-btn"
                     >
@@ -255,7 +272,7 @@ const Home = () => {
           </p>
         </div>
         <div>
-          <form 
+          <form
             onSubmit={(e) => {
               e.preventDefault();
               setToastMessage("Thank you for subscribing to the Yolanda Circle!");
