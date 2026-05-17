@@ -19,6 +19,8 @@ interface CartContextType {
   cartTotal: number;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
+  isWhatsAppCartOpen: boolean;
+  setIsWhatsAppCartOpen: (open: boolean) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -26,6 +28,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isWhatsAppCartOpen, setIsWhatsAppCartOpen] = useState(false);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -93,6 +96,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         cartTotal,
         isCartOpen,
         setIsCartOpen,
+        isWhatsAppCartOpen,
+        setIsWhatsAppCartOpen,
       }}
     >
       {children}

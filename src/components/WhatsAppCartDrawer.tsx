@@ -1,23 +1,37 @@
-import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import { X, Plus, Minus, Trash2, ShoppingBag, CreditCard } from "lucide-react";
+import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
 
-export function CartDrawer() {
-  const navigate = useNavigate();
+export function WhatsAppCartDrawer() {
   const {
     cartItems,
-    isCartOpen,
-    setIsCartOpen,
+    isWhatsAppCartOpen,
+    setIsWhatsAppCartOpen,
     updateQuantity,
     removeFromCart,
     cartTotal,
   } = useCart();
 
-  if (!isCartOpen) return null;
+  if (!isWhatsAppCartOpen) return null;
 
-  const handleProceedToCheckout = () => {
-    setIsCartOpen(false); // Close drawer
-    navigate("/checkout");
+  const whatsappNumber = "2348012345678"; // Official Yolanda Fabrics Lagos WhatsApp
+
+  const handleWhatsAppCheckout = () => {
+    let message = `Hello Yolanda Fabrics! I would like to place an order for the following luxury fabrics:\n\n🛍️ *MY SELECTION:*\n----------------------------------\n`;
+    
+    cartItems.forEach((item, idx) => {
+      message += `${idx + 1}. ⚜️ *${item.title}*\n`;
+      message += `   • Category: ${item.category}\n`;
+      message += `   • Price: ₦${item.pricePerYard.toLocaleString()} / Yard\n`;
+      message += `   • Quantity: ${item.quantity}\n`;
+      message += `   • Subtotal: ₦${(item.pricePerYard * item.quantity).toLocaleString()}\n\n`;
+    });
+    
+    message += `----------------------------------\n`;
+    message += `💵 *TOTAL AMOUNT:* ₦${cartTotal.toLocaleString()}\n\n`;
+    message += `Please let me know how to proceed with payment and delivery. Thank you!`;
+    
+    const encoded = encodeURIComponent(message);
+    window.open(`https://wa.me/${whatsappNumber}?text=${encoded}`, "_blank");
   };
 
   return (
@@ -25,7 +39,7 @@ export function CartDrawer() {
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/40 backdrop-blur-xs transition-opacity duration-300"
-        onClick={() => setIsCartOpen(false)}
+        onClick={() => setIsWhatsAppCartOpen(false)}
       />
 
       {/* Drawer Panel */}
@@ -33,11 +47,11 @@ export function CartDrawer() {
         {/* Header */}
         <div className="p-6 border-b border-[rgba(184,150,46,0.15)] flex justify-between items-center bg-[#FAFAF7]">
           <div className="flex items-center gap-2">
-            <ShoppingBag size={18} className="text-[#B8962E]" />
-            <h3 className="font-serif text-sm tracking-[0.15em] uppercase text-[#111111] m-0">Your Bag</h3>
+            <ShoppingBag size={18} className="text-[#25D366]" />
+            <h3 className="font-serif text-sm tracking-[0.15em] uppercase text-[#111111] m-0">WhatsApp Bag</h3>
           </div>
           <button 
-            onClick={() => setIsCartOpen(false)}
+            onClick={() => setIsWhatsAppCartOpen(false)}
             className="text-[#777777] hover:text-[#111111] transition-colors p-1 bg-transparent border-none cursor-pointer"
           >
             <X size={20} />
@@ -51,7 +65,7 @@ export function CartDrawer() {
               <ShoppingBag size={48} className="text-[rgba(184,150,46,0.25)] mb-4" />
               <p className="font-serif text-[#111111] text-xs tracking-wider uppercase mb-1">Your bag is empty</p>
               <p className="text-[#777777] text-[10px] font-light max-w-[240px] leading-relaxed">
-                Explore our exquisite collections and weave your bespoke imperial legacy.
+                Add premium fabrics to compile your custom WhatsApp booking order.
               </p>
             </div>
           ) : (
@@ -133,15 +147,14 @@ export function CartDrawer() {
             </div>
             
             <p className="text-[8px] text-[#777777] text-center italic leading-normal m-0">
-              Review your items and proceed to our secure billing gateway to finalize your luxury purchase.
+              Your bag list will be pre-filled and sent to our customer care desk via WhatsApp instantly.
             </p>
 
             <button 
-              onClick={handleProceedToCheckout}
-              className="w-full bg-[#111111] hover:bg-[#B8962E] text-[#FFFFFF] font-sans text-[9px] tracking-[0.2em] uppercase font-bold py-3.5 px-4 transition-all duration-300 shadow-md shadow-[#111111]/10 border-none cursor-pointer flex items-center justify-center gap-2"
+              onClick={handleWhatsAppCheckout}
+              className="w-full bg-[#25D366] hover:bg-[#1EBE57] text-[#FFFFFF] font-sans text-[9px] tracking-[0.2em] uppercase font-bold py-3.5 px-4 transition-all duration-300 shadow-md shadow-[#25D366]/20 border-none cursor-pointer flex items-center justify-center gap-2"
             >
-              <CreditCard size={12} />
-              Proceed to Checkout
+              Order on WhatsApp
             </button>
           </div>
         )}
